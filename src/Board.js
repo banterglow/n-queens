@@ -9,7 +9,7 @@
     initialize: function (params) {
       if (_.isUndefined(params) || _.isNull(params)) {
         console.log('Good guess! But to use the Board() constructor, you must pass it an argument in one of the following formats:');
-        console.log('\t1. An object. To create an empty board of size n:\n\t\t{n: %c<num>%c} - Where %c<num> %cis the dimension of the (empty) board you wish to instantiate\n\t\t%cEXAMPLE: var board = new Board({n:5})', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: grey;');
+        console.log('\t1. An object. To create an empty board of size n:\n\t\t{n: %c<num>%c} - Where %c<num>%c is the dimension of the (empty) board you wish to instantiate\n\t\t%cEXAMPLE: var board = new Board({n:5})', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: grey;');
         console.log('\t2. An array of arrays (a matrix). To create a populated board of size n:\n\t\t[ [%c<val>%c,%c<val>%c,%c<val>%c...], [%c<val>%c,%c<val>%c,%c<val>%c...], [%c<val>%c,%c<val>%c,%c<val>%c...] ] - Where each %c<val>%c is whatever value you want at that location on the board\n\t\t%cEXAMPLE: var board = new Board([[1,0,0],[0,1,0],[0,0,1]])', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: blue;', 'color: black;', 'color: grey;');
       } else if (params.hasOwnProperty('n')) {
         this.set(makeEmptyMatrix(this.get('n')));
@@ -133,36 +133,38 @@
     hasMajorDiagonalConflictAt: function(majorDiagonalColumnIndexAtFirstRow) {
       var boardArrays = this.rows();
       var count = 0;
-      for (var i = 0; i < boardArrays.length; i++) {
-        if (majorDiagonalColumnIndexAtFirstRow >= boardArrays.length) {
-          return count > 1;
+      if (majorDiagonalColumnIndexAtFirstRow >= 0) {
+        for (var i = 0; i < boardArrays.length; i++) {
+          if (majorDiagonalColumnIndexAtFirstRow >= boardArrays.length) {
+            return count > 1;
+          }
+          count += boardArrays[i][majorDiagonalColumnIndexAtFirstRow];
+          majorDiagonalColumnIndexAtFirstRow++;
         }
-        count += boardArrays[i][majorDiagonalColumnIndexAtFirstRow];
-        majorDiagonalColumnIndexAtFirstRow++;
+        return count > 1;
       }
-      return count > 1;
+      if (majorDiagonalColumnIndexAtFirstRow < 0) {
+        majorDiagonalColumnIndexAtFirstRow *= -1;
+        for (var a = 0; a < boardArrays.length; a++) {
+          if (majorDiagonalColumnIndexAtFirstRow === boardArrays.length) {
+            return count > 1;
+          }
+          count += boardArrays[majorDiagonalColumnIndexAtFirstRow][a];
+          majorDiagonalColumnIndexAtFirstRow++; 
+        }
+        return count > 1;
+      }
     },
 
     // test if any major diagonals on this board contain conflicts
     hasAnyMajorDiagonalConflicts: function() {
       var boardArrays = this.rows();
-      var count = 0;
-      for (var i = 0; i < boardArrays.length; i++) {
+      for (var i = boardArrays.length * -1 + 1; i < boardArrays.length; i++) {
         if (this.hasMajorDiagonalConflictAt(i)) {
           return true;
         }
       }
-      for (var a = 1; a < boardArrays.length; a++) {
-        var storeA = a;
-        for (var b = 0; b < boardArrays.length; b++) {
-          if (storeA === boardArrays.length) {
-            return count > 1;
-          }
-          count += boardArrays[storeA][b];
-          storeA++;          
-        } 
-      }
-      return count > 1;
+      return false;
     },
 
 
@@ -174,36 +176,39 @@
     hasMinorDiagonalConflictAt: function(minorDiagonalColumnIndexAtFirstRow) {
       var boardArrays = this.rows();
       var count = 0;
-      for (var i = 0; i < boardArrays.length; i++) {
-        if (minorDiagonalColumnIndexAtFirstRow < 0) {
-          return count > 1;
+      if (minorDiagonalColumnIndexAtFirstRow < boardArrays.length) {
+        for (var i = 0; i < boardArrays.length; i++) {
+          if (minorDiagonalColumnIndexAtFirstRow < 0) {
+            return count > 1;
+          }
+          count += boardArrays[i][minorDiagonalColumnIndexAtFirstRow];
+          minorDiagonalColumnIndexAtFirstRow--;
         }
-        count += boardArrays[i][minorDiagonalColumnIndexAtFirstRow];
-        minorDiagonalColumnIndexAtFirstRow--;
+        return count > 1;
       }
-      return count > 1;
+      if (minorDiagonalColumnIndexAtFirstRow >= boardArrays.length && minorDiagonalColumnIndexAtFirstRow < (2 * boardArrays.length - 1)) {
+        minorDiagonalColumnIndexAtFirstRow = minorDiagonalColumnIndexAtFirstRow - boardArrays.length + 1;
+        for (var b = boardArrays.length - 1; b > 0; b--) {
+          if (minorDiagonalColumnIndexAtFirstRow === boardArrays.length) {
+            return count > 1;
+          }
+          count += boardArrays[minorDiagonalColumnIndexAtFirstRow][b];
+          minorDiagonalColumnIndexAtFirstRow++; 
+        }
+        return count > 1;
+      }
     },
 
     // test if any minor diagonals on this board contain conflicts
     hasAnyMinorDiagonalConflicts: function() {
       var boardArrays = this.rows();
       var count = 0;
-      for (var i = 0; i < boardArrays.length; i++) {
+      for (var i = 0; i < 2 * boardArrays.length - 1; i++) {
         if (this.hasMinorDiagonalConflictAt(i)) {
           return true;
         }
       }
-      for (var a = 1; a < boardArrays.length; a++) {
-        var storeA = a;
-        for (var b = boardArrays.length - 1; b > 0; b--) {
-          if (storeA === boardArrays.length) {
-            return count > 1;
-          }
-          count += boardArrays[storeA][b];
-          storeA++;          
-        } 
-      }
-      return count > 1;
+      return false;
     }
 
     /*--------------------  End of Helper Functions  ---------------------*/
