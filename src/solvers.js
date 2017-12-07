@@ -64,13 +64,49 @@ window.findNRooksSolution = function(n) {
 
 // start by toggling a random index? then check if the arrays are equal, if not, count++
 window.countNRooksSolutions = function(n) {
-  var board = new Board({ 'n': n});
+  var newBoard = new Board( { 'n': n } );
+  var solution = newBoard.rows();
+  newBoard.togglePiece(0, 0);
   
+  var flag = false;
+  var fillNextValidSpace = function() {
+    flag = false;
+    
+    for (var a = 0; a < n; a++) {
+      for (var b = 0; b < n; b++) {
+        if (solution[a][b] === 0) {
+          // 
+          if (!newBoard.hasRowConflictAtUsed(a) && !newBoard.hasColConflictAtUsed(b)) {
+            newBoard.togglePiece(a, b);
+            flag = true;
+            a = n;
+            b = n;
+          } else {
+            solution[a][b] = null;
+          }
+        }
+      } 
+    }
+    
+    if (flag) {
+      return fillNextValidSpace();
+    }
+    return null;
+  };
+    
+  fillNextValidSpace();
   
-  var solutionCount = undefined; //fixme
+  // change nulls back to 0
+  for (var c = 0; c < solution.length; c++) {
+    for (var d = 0; d < solution[c].length; d++) {
+      if (_.isNull(solution[c][d])) {
+        solution[c][d] = 0;
+      }
+    }
+  }
 
-  // console.log('Number of solutions for ' + n + ' rooks:', solutionCount);
-  // return solutionCount;
+  console.log('Number of solutions for ' + n + ' rooks:', solution);
+  return solution;
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
