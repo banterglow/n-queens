@@ -66,99 +66,105 @@ window.findNRooksSolution = function(n) {
 window.countNRooksSolutions = function(n) {
   var board = new Board({ 'n': n});
   var counter = n;
+  var validBoardObject = {};
   
-  var compileMoves = function(curBoard) {
-    var boardArray = curBoard.rows();
-    var optionsArray = [];
+  var compileMoves = function(depth) {
+    var boardArray = board.rows();
+    var options = [];
     for (var a = 0; a < boardArray.length; a++) {
       for (var b = 0; b < boardArray.length; b++) {
         if (boardArray[a][b] === 0) {
-          if (!curBoard.hasRowConflictAtUsed(a) && !curBoard.hasColConflictAtUsed(b)) {
-            optionsArray.push([a, b]);
+          if (!board.hasRowConflictAtUsed(a) && !board.hasColConflictAtUsed(b)) {
+            options.push([a, b]);
+            if (options.length === depth + 1)  {
+              a = boardArray.length;
+              b = boardArray.length;
+            }
           }
         }
       } 
     }
-    return optionsArray;
+    return options;
   };
   
-  var populatePossibleBoards = function (currentBoard, counter, validBoardObject, moveArray) {
+  var populatePossibleBoards = function (count, moveArray) {
     if (moveArray) {
-      currentBoard.togglePiece(moveArray[0], moveArray[1]);
+      board.togglePiece(moveArray[0], moveArray[1]);
     }
-    if (counter === 0) {
-      validBoardObject[JSON.stringify(currentBoard.rows())] = 1;
-      currentBoard.togglePiece(moveArray[0], moveArray[1]);
-      return validBoardObject;
+    if (count === 0) {
+      validBoardObject[JSON.stringify(board.rows())] = 1;
+      board.togglePiece(moveArray[0], moveArray[1]);
+      return;
     }
-    counter--;
+    count--;
     
-    var optionsArray = compileMoves(currentBoard);
+    var optionsArray = compileMoves(count);
     
     for (var i = 0; i < optionsArray.length; i++) {
-      _.extend(validBoardObject, populatePossibleBoards(currentBoard, counter, validBoardObject, optionsArray[i]));
+      populatePossibleBoards(count, optionsArray[i]);
     }
     
-    if (moveArray) {
-      currentBoard.togglePiece(moveArray[0], moveArray[1]);
+    if (moveArray) { // change back to move array
+      board.togglePiece(moveArray[0], moveArray[1]);
     }
-    return validBoardObject;
+    return;
   };
   
-  var solution = populatePossibleBoards(board, counter, {});
-  var solutionCount = Object.keys(solution).length;
+  populatePossibleBoards(counter);
+  
+  var solutionCount = Object.keys(validBoardObject).length;
   console.log('Number of solutions for ' + n + ' rooks:', solutionCount);
   return solutionCount;
 };
 
 // return a matrix (an array of arrays) representing a single nxn chessboard, with n queens placed such that none of them can attack each other
 window.findNQueensSolution = function(n) {
-  var newBoard = new Board( { 'n': n } );
-  var solution = newBoard.rows();
+  // var board = new Board({ 'n': n});
+  // var counter = n;
   
-  /* ---------- NEED A FIX FOR THIS BELOW ---------- */
-  if (n > 1) {
-    newBoard.togglePiece(0, 1);
-  }
+  // var compileMoves = function(curBoard) {
+  //   var boardArray = curBoard.rows();
+  //   var optionsArray = [];
+  //   for (var a = 0; a < boardArray.length; a++) {
+  //     for (var b = 0; b < boardArray.length; b++) {
+  //       if (boardArray[a][b] === 0) {
+  //         if (!curBoard.hasRowConflictAtUsed(a) && !curBoard.hasColConflictAtUsed(b)) {
+  //           optionsArray.push([a, b]);
+  //         }
+  //       }
+  //     } 
+  //   }
+  //   return optionsArray;
+  // };
   
-  var flag = false;
-  var fillNextValidSpace = function() {
-    flag = false;
-    // potentially skip one valid solution?
-    for (var a = 0; a < n; a++) {
-      for (var b = 0; b < n; b++) {
-        if (solution[a][b] === 0) {
-          if (!newBoard.hasRowConflictAtUsed(a) && !newBoard.hasColConflictAtUsed(b) && !newBoard.hasMajorDiagonalConflictAtUsed(newBoard._getFirstRowColumnIndexForMajorDiagonalOn(a, b)) && !newBoard.hasMinorDiagonalConflictAtUsed(newBoard._getFirstRowColumnIndexForMinorDiagonalOn(a, b))) {
-            newBoard.togglePiece(a, b);
-            flag = true;
-            a = n;
-            b = n;
-          } else {
-            solution[a][b] = null;
-          }
-        }
-      } 
-    }
+  // var populatePossibleBoards = function (currentBoard, counter, moveArray) {
+  //   if (moveArray) {
+  //     currentBoard.togglePiece(moveArray[0], moveArray[1]);
+  //   }
+  //   if (counter === 0) {
+  //     currentBoard.togglePiece(moveArray[0], moveArray[1]);
+  //     return validBoardObject;
+  //   }
+  //   counter--;
     
-    if (flag) {
-      return fillNextValidSpace();
-    }
-    return null;
-  };
+  //   var optionsArray = compileMoves(currentBoard);
     
-  fillNextValidSpace();
+  //   for (var i = 0; i < optionsArray.length; i++) {
+  //     var solution = populatePossibleBoards(currentBoard, counter, validBoardObject, optionsArray[i]);
+  //     if (!_.isUndefined(solution)) {
+  //       return solution;
+  //     }
+  //   }
+  //   return;
+  //   // if (moveArray) { // change back to move array
+  //   //   currentBoard.togglePiece(moveArray[0], moveArray[1]);
+  //   // }
+  // };
   
-  // change nulls back to 0
-  for (var c = 0; c < solution.length; c++) {
-    for (var d = 0; d < solution[c].length; d++) {
-      if (_.isNull(solution[c][d])) {
-        solution[c][d] = 0;
-      }
-    }
-  }
+  // var solution = populatePossibleBoards(board, counter, {});
 
-  console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
-  return solution;
+  // console.log('Single solution for ' + n + ' queens:', JSON.stringify(solution));
+  // return solution;
 };
 
 // return the number of nxn chessboards that exist, with n queens placed such that none of them can attack each other
